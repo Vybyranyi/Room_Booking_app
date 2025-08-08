@@ -1,0 +1,30 @@
+# Залежності Node.js
+/node_modules
+
+# Компільований код TypeScript
+/dist
+
+# Змінні середовища
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Звіти про помилки та дампи
+# https://github.com/nodejs/node/wiki/Debugging--_Getting-started
+.pnpm-debug.log*
+.npm
+.pnpm-state.json
+/coverage
+/lcov-report
+
+# Editor/OS Files
+.vscode
+.DS_Store
