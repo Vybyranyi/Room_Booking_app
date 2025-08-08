@@ -9,10 +9,37 @@ interface AuthState {
   error: string | null;
 }
 
+// Функції для роботи з localStorage
+const loadFromStorage = () => {
+  try {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    return {
+      token,
+      user: user ? JSON.parse(user) : null
+    };
+  } catch (error) {
+    return { token: null, user: null };
+  }
+};
+
+const saveToStorage = (token: string, user: any) => {
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+};
+
+const clearStorage = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+};
+
+// Завантажуємо дані з localStorage
+const { token: savedToken, user: savedUser } = loadFromStorage();
+
 // Початковий стан
 const initialState: AuthState = {
-  user: null,
-  token: null,
+  user: savedUser,
+  token: savedToken,
   isLoading: false,
   error: null,
 };
@@ -79,6 +106,7 @@ const authSlice = createSlice({
       state.token = null;
       state.isLoading = false;
       state.error = null;
+      clearStorage();
     },
   },
   extraReducers: (builder) => {
@@ -92,6 +120,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        saveToStorage(action.payload.token, action.payload.user);
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -106,6 +135,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        saveToStorage(action.payload.token, action.payload.user);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;

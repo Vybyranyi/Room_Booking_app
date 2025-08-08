@@ -5,18 +5,34 @@ interface UserAttributes {
   id: number;
   name: string;
   email: string;
-  password?: string;
+  password: string;
   role: 'Admin' | 'User';
 }
 
-interface UserCreationAttributes extends Optional<UserAttributes, 'id'> { }
+interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
 
 export class User extends Model<UserAttributes, UserCreationAttributes> {
-  public id!: number;
-  public name!: string;
-  public email!: string;
-  public password!: string;
-  public role!: 'Admin' | 'User';
+  get id(): number {
+    return this.getDataValue('id');
+  }
+  get name(): string {
+    return this.getDataValue('name');
+  }
+  get email(): string {
+    return this.getDataValue('email');
+  }
+  get password(): string {
+    return this.getDataValue('password');
+  }
+  get role(): 'Admin' | 'User' {
+    return this.getDataValue('role');
+  }
+
+  public toJSON(): Omit<UserAttributes, 'password'> {
+    const values = Object.assign({}, this.get()) as any;
+    delete values.password;
+    return values;
+  }
 }
 
 User.init(
@@ -49,13 +65,5 @@ User.init(
     sequelize,
     tableName: 'users',
     timestamps: false,
-    defaultScope: {
-      attributes: { exclude: ['password'] }
-    },
-    scopes: {
-      withPassword: {
-        attributes: { include: ['password'] }
-      }
-    }
   }
 );

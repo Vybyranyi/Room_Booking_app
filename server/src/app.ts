@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
+const JWT_SECRET = 'fgdhfjfjtfyutfjy';
 
 app.use(json());
 app.use(cors());
@@ -54,17 +54,16 @@ app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.scope('withPassword').findOne({
-      where: { email }
-    });
+    const user = await User.findOne({ where: { email } });
 
     if (!user) {
       return res.status(401).json({ message: 'Неправильна електронна пошта або пароль' });
     }
 
-    console.log('User found:', user.email);
-    console.log('Password from body:', password);
-    console.log('Password from DB:', user.password);
+    if (!user.password) {
+      console.error('Login error: Password field is null or undefined for user:', user.email);
+      return res.status(500).json({ message: 'Внутрішня помилка сервера: неможливо перевірити пароль.' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
@@ -85,6 +84,7 @@ app.post('/api/auth/login', async (req, res) => {
         role: user.role,
       }
     });
+
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Внутрішня помилка сервера' });
