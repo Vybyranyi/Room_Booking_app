@@ -1,7 +1,17 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 
-class User extends Model {
+interface UserAttributes {
+  id: number;
+  name: string;
+  email: string;
+  password?: string;
+  role: 'Admin' | 'User';
+}
+
+interface UserCreationAttributes extends Optional<UserAttributes, 'id'> { }
+
+export class User extends Model<UserAttributes, UserCreationAttributes> {
   public id!: number;
   public name!: string;
   public email!: string;
@@ -39,7 +49,13 @@ User.init(
     sequelize,
     tableName: 'users',
     timestamps: false,
+    defaultScope: {
+      attributes: { exclude: ['password'] }
+    },
+    scopes: {
+      withPassword: {
+        attributes: { include: ['password'] }
+      }
+    }
   }
 );
-
-export default User;

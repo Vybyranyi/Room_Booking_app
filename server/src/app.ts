@@ -39,9 +39,9 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 
     const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, JWT_SECRET, { expiresIn: '1h' });
 
-    res.status(201).json({ 
-      token, 
-      user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role } 
+    res.status(201).json({
+      token,
+      user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role }
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -50,29 +50,44 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 });
 
 // Ендпоінт для входу користувача
-app.post('/api/auth/login', async (req: Request, res: Response) => {
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+
   try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
-    }
-
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-
-    res.status(200).json({ 
-      token, 
-      user: { id: user.id, name: user.name, email: user.email, role: user.role } 
+    const user = await User.scope('withPassword').findOne({
+      where: { email }
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login.' });
+
+    if (!user) {
+      return res.status(401).json({ message: 'Неправильна електронна пошта або пароль' });
+    }
+
+    console.log('User found:', user.email);
+    console.log('Password from body:', password);
+    console.log('Password from DB:', user.password);
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Неправильна електронна пошта або пароль' });
+    }
+
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET as string, {
+      expiresIn: '1h',
+    });
+
+    res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Внутрішня помилка сервера' });
   }
 });
 
